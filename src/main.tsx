@@ -8,10 +8,13 @@ import { PhotoList } from './components/PhotoList.tsx';
 import { Photo } from './components/Photo.tsx';
 import { Layout } from './components/Layout.tsx';
 import { ThemeProvider } from './components/ThemeProvider.tsx';
+import { ErrorPage } from './components/ErrorPage.tsx';
+import { NotFound } from './components/NotFound.tsx';
 
 const router = createBrowserRouter([
   {
     element: <Layout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: '/',
@@ -28,6 +31,10 @@ const router = createBrowserRouter([
       {
         path: '/photos/:filename',
         element: <Photo />,
+      },
+      {
+        path: '*',
+        element: <NotFound />,
       },
     ],
   },

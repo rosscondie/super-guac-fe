@@ -3,15 +3,14 @@ import { useState, useEffect } from 'react';
 import { BACKEND_ORIGIN } from '../lib/config';
 
 export const Photo = () => {
-  const { filename } = useParams<{ filename: string }>();
+  const { slug, filename } = useParams<{ slug: string; filename: string }>();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // For now just build the URL since backend returns no extra meta for single photo
-    if (filename) {
-      setPhotoUrl(`${BACKEND_ORIGIN}/images/${filename}`);
+    if (slug && filename) {
+      setPhotoUrl(`${BACKEND_ORIGIN}/photos/${slug}/${filename}`);
     }
-  }, [filename]);
+  }, [slug, filename]);
 
   if (!photoUrl) return <p>Loading...</p>;
 

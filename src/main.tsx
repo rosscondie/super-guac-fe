@@ -10,6 +10,7 @@ import { Layout } from './components/Layout.tsx';
 import { ThemeProvider } from './components/ThemeProvider.tsx';
 import { ErrorPage } from './components/ErrorPage.tsx';
 import { NotFound } from './components/NotFound.tsx';
+import { AboutPage } from './components/AboutPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: '/photos/:filename',
         element: <Photo />,
+      },
+      {
+        path: '/about',
+        element: <AboutPage />,
       },
       {
         path: '*',

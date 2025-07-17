@@ -1,7 +1,15 @@
-import { Outlet } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 import { ModeToggle } from './ModeToggle';
+import { useContext } from 'react';
+import { AuthContext } from './AuthContext';
+import { LogoutButton } from './LogoutButton';
+import { Button } from './ui/button';
+import { LogIn } from 'lucide-react';
 
 export const Layout = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   return (
     <>
       <nav className="bg-card text-card-foreground shadow-md">
@@ -20,6 +28,18 @@ export const Layout = () => {
               About
             </a>
             <ModeToggle />
+
+            {isAuthenticated ? (
+              <LogoutButton />
+            ) : (
+              <Button
+                className="hover: cursor-pointer"
+                onClick={() => navigate('/login')}
+              >
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            )}
           </div>
         </div>
       </nav>
@@ -29,7 +49,8 @@ export const Layout = () => {
       </main>
 
       <footer className="bg-muted text-muted-foreground text-center py-4 text-sm">
-        © {new Date().getFullYear()} My Photo Blog — Built with ❤️ and ☕️
+        © All photos are copyrighted {new Date().getFullYear()} - Built with ❤️
+        and ☕️
       </footer>
     </>
   );

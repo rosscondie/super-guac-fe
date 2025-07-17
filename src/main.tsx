@@ -4,13 +4,18 @@ import './index.css';
 import App from './App.tsx';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { Post } from './components/Post.tsx';
-import { PhotoList } from './components/PhotoList.tsx';
 import { Photo } from './components/Photo.tsx';
 import { Layout } from './components/Layout.tsx';
 import { ThemeProvider } from './components/ThemeProvider.tsx';
 import { ErrorPage } from './components/ErrorPage.tsx';
 import { NotFound } from './components/NotFound.tsx';
 import { AboutPage } from './components/AboutPage.tsx';
+import { AlbumsPage } from './components/AlbumsPage.tsx';
+import { AlbumDetailPage } from './components/AlbumDetailPage.tsx';
+import LoginPage from './pages/LoginPage.tsx';
+import { AuthProvider } from './components/AuthContext.tsx';
+import { ProtectedRoute } from './components/ProtectedRoute.tsx';
+import { AdminPage } from './pages/AdminPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -22,12 +27,20 @@ const router = createBrowserRouter([
         element: <App />,
       },
       {
+        path: '/login',
+        element: <LoginPage />,
+      },
+      {
         path: '/posts/:slug',
         element: <Post />,
       },
       {
         path: '/photos',
-        element: <PhotoList />,
+        element: <AlbumsPage />,
+      },
+      {
+        path: '/photos/:slug',
+        element: <AlbumDetailPage />,
       },
       {
         path: '/photos/:filename',
@@ -41,14 +54,24 @@ const router = createBrowserRouter([
         path: '*',
         element: <NotFound />,
       },
+      {
+        path: '/admin',
+        element: (
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <RouterProvider router={router} />
-    </ThemeProvider>
-  </StrictMode>,
+  <AuthProvider>
+    <StrictMode>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </StrictMode>
+  </AuthProvider>,
 );

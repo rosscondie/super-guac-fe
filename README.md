@@ -18,7 +18,6 @@ This is the React frontend for the Photo Blog project. It connects to the Go + F
 │   └── vite.svg
 ├── README.md
 ├── src/
-│   ├── App.css
 │   ├── App.tsx
 │   ├── assets/
 │   ├── components/

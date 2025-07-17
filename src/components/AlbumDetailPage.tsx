@@ -33,7 +33,6 @@ export const AlbumDetailPage = () => {
 
         setPhotos(photosData);
 
-        // Since you don't have metadata API, use slug as title fallback
         setMetadata({ title: slug || 'Album' });
       } catch (err) {
         console.error(err);

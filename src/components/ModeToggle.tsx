@@ -12,6 +12,7 @@ export function ModeToggle() {
 
   return (
     <Button
+      className="hover: cursor-pointer"
       onClick={toggleTheme}
       variant="outline"
       size="icon"

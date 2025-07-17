@@ -66,7 +66,7 @@ export const AlbumDetailPage = () => {
             <img
               src={`${BACKEND_ORIGIN}${url}`}
               alt={filename}
-              className="w-full h-auto rounded-md object-cover transition-transform hover:scale-105 cursor-pointer"
+              className="w-full h-auto rounded-md object-cover transition-transform hover:scale-105 cursor-zoom-in"
             />
           </button>
         ))}

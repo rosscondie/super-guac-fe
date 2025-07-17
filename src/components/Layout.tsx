@@ -15,7 +15,7 @@ export const Layout = () => {
       <nav className="bg-card text-card-foreground shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center h-16">
           <a href="/" className="font-bold text-xl">
-            My Photo Blog
+            ryl0p3z
           </a>
           <div className="flex items-center space-x-6">
             <a href="/" className="hover:text-primary transition-colors">

@@ -38,7 +38,7 @@ export const AlbumsPage = () => {
         <button
           key={album.slug}
           onClick={() => navigate(`/photos/${album.slug}`)}
-          className="text-left group"
+          className="text-left group hover:cursor-pointer"
           aria-label={`Open album ${album.name}`}
         >
           <div className="aspect-square w-full overflow-hidden rounded-lg shadow hover:shadow-md transition">

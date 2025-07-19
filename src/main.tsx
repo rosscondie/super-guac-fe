@@ -79,7 +79,7 @@ createRoot(document.getElementById('root')!).render(
   <AuthProvider>
     <StrictMode>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <Toaster richColors position="top-center" />
+        <Toaster richColors />
         <RouterProvider router={router} />
       </ThemeProvider>
     </StrictMode>

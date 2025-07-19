@@ -5,8 +5,9 @@ import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useTheme } from './ThemeProvider';
 import { toast } from 'sonner';
-import { Pencil, Trash, Upload } from 'lucide-react';
-import { Button } from './ui/button';
+import { Pencil, Upload } from 'lucide-react';
+import { DeletePhotoButton } from './DeletePhotoButton';
+import { Spinner } from './ui/spinner';
 
 type Photo = {
   filename: string;
@@ -24,6 +25,7 @@ export const AlbumDetailPage = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [metadata, setMetadata] = useState<AlbumMetadata | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const { theme } = useTheme();
 
@@ -34,6 +36,7 @@ export const AlbumDetailPage = () => {
   const isLoggedIn = !!token;
 
   const fetchPhotos = async () => {
+    setLoadingPhotos(true);
     try {
       const res = await fetch(`${API_URL}/albums/${slug}`);
       if (!res.ok) throw new Error('Failed to fetch album photos');
@@ -44,7 +47,8 @@ export const AlbumDetailPage = () => {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setLoadingPhotos(false);
+      setLoading(false); // keep your existing loading state as well
     }
   };
 
@@ -81,8 +85,6 @@ export const AlbumDetailPage = () => {
 
   const handleDeletePhoto = async (filename: string) => {
     if (!slug || !token) return;
-    const confirmed = window.confirm(`Delete photo "${filename}"?`);
-    if (!confirmed) return;
 
     try {
       const res = await fetch(`${API_URL}/albums/${slug}/photos/${filename}`, {
@@ -93,15 +95,22 @@ export const AlbumDetailPage = () => {
       });
 
       if (!res.ok) throw new Error('Failed to delete photo');
+
+      setOpenIndex(null);
       toast.success('Photo deleted');
-      fetchPhotos();
     } catch (err) {
       toast.error('Delete failed.');
       console.error(err);
     }
   };
 
-  if (loading) return <p>Loading album...</p>;
+  if (loading || loadingPhotos)
+    return (
+      <div className="flex flex-col items-center justify-center p-8">
+        <Spinner size="large" />
+        <p className="mt-4 text-lg">Loading album...</p>
+      </div>
+    );
 
   const slides = photos.map((photo) => ({
     src: `${BACKEND_ORIGIN}${photo.url}`,
@@ -154,18 +163,10 @@ export const AlbumDetailPage = () => {
               />
 
               {isAdmin && token && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation(); // prevent opening the lightbox
-                    handleDeletePhoto(filename);
-                  }}
-                  className="absolute top-2 right-2 text-white hover:bg-opacity-90 cursor-pointer bg-black bg-opacity-60 rounded-full opacity-0 group-hover:opacity-100 transition"
-                  aria-label={`Delete photo ${filename}`}
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
+                <DeletePhotoButton
+                  filename={filename}
+                  onDelete={handleDeletePhoto}
+                />
               )}
             </div>
           </button>

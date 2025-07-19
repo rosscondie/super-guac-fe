@@ -1,11 +1,12 @@
-import { useLocation, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 import { useEffect, useState } from 'react';
 import { BACKEND_ORIGIN, API_URL } from '../lib/config';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useTheme } from './ThemeProvider';
 import { toast } from 'sonner';
-import { Upload } from 'lucide-react';
+import { Pencil, Trash, Upload } from 'lucide-react';
+import { Button } from './ui/button';
 
 type Photo = {
   filename: string;
@@ -30,6 +31,7 @@ export const AlbumDetailPage = () => {
   const isAdmin = location.pathname.startsWith('/admin');
 
   const token = localStorage.getItem('token');
+  const isLoggedIn = !!token;
 
   const fetchPhotos = async () => {
     try {
@@ -70,9 +72,31 @@ export const AlbumDetailPage = () => {
 
       if (!res.ok) throw new Error('Failed to upload photos');
       toast.success('Photos uploaded!');
-      fetchPhotos(); // Refresh the list
+      fetchPhotos();
     } catch (err) {
       toast.error('Upload failed.');
+      console.error(err);
+    }
+  };
+
+  const handleDeletePhoto = async (filename: string) => {
+    if (!slug || !token) return;
+    const confirmed = window.confirm(`Delete photo "${filename}"?`);
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${API_URL}/albums/${slug}/photos/${filename}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to delete photo');
+      toast.success('Photo deleted');
+      fetchPhotos();
+    } catch (err) {
+      toast.error('Delete failed.');
       console.error(err);
     }
   };
@@ -88,6 +112,16 @@ export const AlbumDetailPage = () => {
     <>
       <div className="flex justify-between items-center p-4">
         <h1 className="text-2xl font-bold">{metadata?.title || slug}</h1>
+
+        {isLoggedIn && !isAdmin && (
+          <Link
+            to={`/admin/photos/${slug}`}
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit Album
+          </Link>
+        )}
 
         {isAdmin && token && (
           <label className="cursor-pointer inline-flex items-center gap-2 text-sm px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-800 transition">
@@ -112,11 +146,28 @@ export const AlbumDetailPage = () => {
             className="block w-full break-inside-avoid focus:outline-none"
             aria-label={`Open photo ${filename}`}
           >
-            <img
-              src={`${BACKEND_ORIGIN}${url}`}
-              alt={filename}
-              className="w-full h-auto rounded-md object-cover transition-transform hover:scale-105 cursor-zoom-in"
-            />
+            <div className="relative group">
+              <img
+                src={`${BACKEND_ORIGIN}${url}`}
+                alt={filename}
+                className="w-full h-auto rounded-md object-cover transition-transform hover:scale-105 cursor-zoom-in"
+              />
+
+              {isAdmin && token && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent opening the lightbox
+                    handleDeletePhoto(filename);
+                  }}
+                  className="absolute top-2 right-2 text-white hover:bg-opacity-90 cursor-pointer bg-black bg-opacity-60 rounded-full opacity-0 group-hover:opacity-100 transition"
+                  aria-label={`Delete photo ${filename}`}
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </button>
         ))}
       </section>

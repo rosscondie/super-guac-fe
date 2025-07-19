@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router';
+import { Link, Outlet, useNavigate } from 'react-router';
 import { ModeToggle } from './ModeToggle';
 import { useContext } from 'react';
 import { AuthContext } from './AuthContext';
@@ -14,19 +14,19 @@ export const Layout = () => {
     <>
       <nav className="bg-card text-card-foreground shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center h-16">
-          <a href="/" className="font-bold text-xl">
+          <Link to="/" className="font-bold text-xl">
             ryl0p3z
-          </a>
+          </Link>
           <div className="flex items-center space-x-6">
-            <a href="/" className="hover:text-primary transition-colors">
+            <Link to="/" className="hover:text-primary transition-colors">
               Blog
-            </a>
-            <a href="/photos" className="hover:text-primary transition-colors">
+            </Link>
+            <Link to="/photos" className="hover:text-primary transition-colors">
               Photography
-            </a>
-            <a href="/about" className="hover:text-primary transition-colors">
+            </Link>
+            <Link to="/about" className="hover:text-primary transition-colors">
               About
-            </a>
+            </Link>
             <ModeToggle />
 
             {isAuthenticated ? (

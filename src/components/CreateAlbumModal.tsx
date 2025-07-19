@@ -10,11 +10,16 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { API_URL } from '@/lib/config';
+import { toast } from 'sonner';
+import { FolderPlus } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 export const CreateAlbumModal = () => {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const [open, setOpen] = useState(false);
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     const res = await fetch(`${API_URL}/albums`, {
@@ -29,7 +34,9 @@ export const CreateAlbumModal = () => {
     if (res.ok) {
       setName('');
       setSlug('');
-      alert('Album created!'); // swap with toast if needed
+      setOpen(false);
+      toast.success('Album created!');
+      navigate(`photos/${slug}`);
     } else {
       const errorText = await res.text();
       console.error('Failed to create album:', res.status, errorText);
@@ -38,9 +45,12 @@ export const CreateAlbumModal = () => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="hover:cursor-pointer">Create Album</Button>
+        <Button className="hover:cursor-pointer">
+          <FolderPlus className="w-4 h-4" />
+          Create Album
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -72,7 +82,9 @@ export const CreateAlbumModal = () => {
         </div>
 
         <DialogFooter>
-          <Button onClick={handleSubmit}>Create</Button>
+          <Button className="hover: cursor-pointer" onClick={handleSubmit}>
+            Create
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

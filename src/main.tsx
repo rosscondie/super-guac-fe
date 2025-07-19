@@ -16,6 +16,7 @@ import LoginPage from './pages/LoginPage.tsx';
 import { AuthProvider } from './components/AuthContext.tsx';
 import { ProtectedRoute } from './components/ProtectedRoute.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
+import { Toaster } from 'sonner';
 
 const router = createBrowserRouter([
   {
@@ -51,16 +52,24 @@ const router = createBrowserRouter([
         element: <AboutPage />,
       },
       {
-        path: '*',
-        element: <NotFound />,
-      },
-      {
         path: '/admin',
         element: (
           <ProtectedRoute>
             <AdminPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: '/admin/photos/:slug',
+        element: (
+          <ProtectedRoute>
+            <AlbumDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '*',
+        element: <NotFound />,
       },
     ],
   },
@@ -70,6 +79,7 @@ createRoot(document.getElementById('root')!).render(
   <AuthProvider>
     <StrictMode>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <Toaster richColors position="top-center" />
         <RouterProvider router={router} />
       </ThemeProvider>
     </StrictMode>

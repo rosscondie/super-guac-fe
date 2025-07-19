@@ -1,9 +1,11 @@
-import { useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
 import { useEffect, useState } from 'react';
 import { BACKEND_ORIGIN, API_URL } from '../lib/config';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useTheme } from './ThemeProvider';
+import { toast } from 'sonner';
+import { Upload } from 'lucide-react';
 
 type Photo = {
   filename: string;
@@ -24,25 +26,56 @@ export const AlbumDetailPage = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const { theme } = useTheme();
 
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  const token = localStorage.getItem('token');
+
+  const fetchPhotos = async () => {
+    try {
+      const res = await fetch(`${API_URL}/albums/${slug}`);
+      if (!res.ok) throw new Error('Failed to fetch album photos');
+      const photosData = await res.json();
+
+      setPhotos(photosData.photos ?? []);
+      setMetadata(photosData.metadata || { title: slug || 'Album' });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPhotos = async () => {
-      try {
-        const res = await fetch(`${API_URL}/albums/${slug}`);
-        if (!res.ok) throw new Error('Failed to fetch album photos');
-        const photosData = await res.json();
-
-        setPhotos(photosData);
-
-        setMetadata({ title: slug || 'Album' });
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPhotos();
   }, [slug]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !slug) return;
+
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append('photo', file);
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/albums/${slug}/photos`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Failed to upload photos');
+      toast.success('Photos uploaded!');
+      fetchPhotos(); // Refresh the list
+    } catch (err) {
+      toast.error('Upload failed.');
+      console.error(err);
+    }
+  };
 
   if (loading) return <p>Loading album...</p>;
 
@@ -53,7 +86,23 @@ export const AlbumDetailPage = () => {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">{metadata?.title || slug}</h1>
+      <div className="flex justify-between items-center p-4">
+        <h1 className="text-2xl font-bold">{metadata?.title || slug}</h1>
+
+        {isAdmin && token && (
+          <label className="cursor-pointer inline-flex items-center gap-2 text-sm px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-800 transition">
+            <Upload className="h-5 w-5" />
+            Upload Photos
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleUpload}
+            />
+          </label>
+        )}
+      </div>
 
       <section className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 p-2 space-y-4">
         {photos.map(({ filename, url }, index) => (
@@ -71,6 +120,12 @@ export const AlbumDetailPage = () => {
           </button>
         ))}
       </section>
+
+      {isAdmin && token && photos.length === 0 && (
+        <div className="text-center text-zinc-500 py-12">
+          This album is empty. Add some photos!
+        </div>
+      )}
 
       {openIndex !== null && (
         <Lightbox

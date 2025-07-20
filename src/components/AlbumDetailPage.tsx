@@ -1,5 +1,5 @@
-import { Link, useLocation, useParams } from 'react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
+import { Link, useLocation, useParams, useNavigate } from 'react-router';
 import { BACKEND_ORIGIN, API_URL } from '../lib/config';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { Pencil, Upload } from 'lucide-react';
 import { DeletePhotoButton } from './DeletePhotoButton';
 import { Spinner } from './ui/spinner';
+import { Button } from './ui/button';
+import { AuthContext } from '../components/AuthContext';
 
 type Photo = {
   filename: string;
@@ -22,6 +24,11 @@ type AlbumMetadata = {
 
 export const AlbumDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const { isAuthenticated, token } = useContext(AuthContext);
+
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [metadata, setMetadata] = useState<AlbumMetadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,11 +36,12 @@ export const AlbumDetailPage = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const { theme } = useTheme();
 
-  const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  const editMode = isAdmin && isAuthenticated;
 
-  const token = localStorage.getItem('token');
-  const isLoggedIn = !!token;
+  useEffect(() => {
+    fetchPhotos();
+  }, [slug]);
 
   const fetchPhotos = async () => {
     setLoadingPhotos(true);
@@ -48,13 +56,9 @@ export const AlbumDetailPage = () => {
       console.error(err);
     } finally {
       setLoadingPhotos(false);
-      setLoading(false); // keep your existing loading state as well
+      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchPhotos();
-  }, [slug]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -84,7 +88,10 @@ export const AlbumDetailPage = () => {
   };
 
   const handleDeletePhoto = async (filename: string) => {
-    if (!slug || !token) return;
+    if (!slug || !isAuthenticated || !token) {
+      toast.error('You must be logged in to delete photos.');
+      return;
+    }
 
     try {
       const res = await fetch(`${API_URL}/albums/${slug}/photos/${filename}`, {
@@ -98,10 +105,19 @@ export const AlbumDetailPage = () => {
 
       setOpenIndex(null);
       toast.success('Photo deleted');
+      fetchPhotos();
     } catch (err) {
       toast.error('Delete failed.');
       console.error(err);
     }
+  };
+
+  const handleCancel = () => {
+    navigate(`/photos/${slug}`);
+  };
+
+  const handleDone = () => {
+    navigate(`/photos/${slug}`);
   };
 
   if (loading || loadingPhotos)
@@ -119,23 +135,46 @@ export const AlbumDetailPage = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center p-4">
-        <h1 className="text-2xl font-bold">{metadata?.title || slug}</h1>
-
-        {isLoggedIn && !isAdmin && (
+      {/* Header */}
+      <div className="relative flex items-center justify-between p-4 h-12">
+        <div className="w-32">
           <Link
-            to={`/admin/photos/${slug}`}
-            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+            to="/photos"
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 whitespace-nowrap"
           >
-            <Pencil className="w-4 h-4" />
-            Edit Album
+            ← Back to Albums
           </Link>
-        )}
+        </div>
 
-        {isAdmin && token && (
+        <h1
+          className={`absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold ${
+            !isAuthenticated ? 'underline' : ''
+          }`}
+        >
+          {metadata?.title || slug}
+        </h1>
+
+        <div className="w-32 text-right">
+          {!editMode && isAuthenticated ? (
+            <Link
+              to={`/admin/photos/${slug}`}
+              className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit Album
+            </Link>
+          ) : (
+            <div className="invisible">placeholder</div>
+          )}
+        </div>
+      </div>
+
+      {/* Admin edit controls */}
+      {editMode && (
+        <div className="flex gap-2 items-center px-4 pb-2">
           <label className="cursor-pointer inline-flex items-center gap-2 text-sm px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-800 transition">
             <Upload className="h-5 w-5" />
-            Upload Photos
+            Upload
             <input
               type="file"
               accept="image/*"
@@ -144,9 +183,22 @@ export const AlbumDetailPage = () => {
               onChange={handleUpload}
             />
           </label>
-        )}
-      </div>
+          <Button
+            className="text-sm px-4 py-2 border rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            onClick={handleDone}
+          >
+            Done
+          </Button>
+        </div>
+      )}
 
+      {/* Photo grid */}
       <section className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 p-2 space-y-4">
         {photos.map(({ filename, url }, index) => (
           <button
@@ -162,7 +214,7 @@ export const AlbumDetailPage = () => {
                 className="w-full h-auto rounded-md object-cover transition-transform hover:scale-105 cursor-zoom-in"
               />
 
-              {isAdmin && token && (
+              {editMode && (
                 <DeletePhotoButton
                   filename={filename}
                   onDelete={handleDeletePhoto}
@@ -173,7 +225,7 @@ export const AlbumDetailPage = () => {
         ))}
       </section>
 
-      {isAdmin && token && photos.length === 0 && (
+      {editMode && photos.length === 0 && (
         <div className="text-center text-zinc-500 py-12">
           This album is empty. Add some photos!
         </div>

@@ -11,6 +11,7 @@ type Album = {
   name: string;
   slug: string;
   cover: string;
+  createdAt?: string;
 };
 
 export const AlbumsPage = () => {
@@ -80,13 +81,16 @@ export const AlbumsPage = () => {
     <>
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
         {albums.map((album) => (
-          <div key={album.slug} className="relative group">
+          <div
+            key={album.slug}
+            className="group relative flex flex-col text-center"
+          >
             <button
               onClick={() => navigate(`/photos/${album.slug}`)}
-              className="text-left w-full"
+              className="w-full hover: cursor-pointer"
               aria-label={`Open album ${album.name}`}
             >
-              <div className="aspect-square w-full overflow-hidden rounded-lg shadow hover:shadow-md transition">
+              <div className="aspect-square w-full overflow-hidden shadow hover:shadow-md transition">
                 <img
                   src={`${BACKEND_ORIGIN}${album.cover}`}
                   alt={album.name}
@@ -94,6 +98,11 @@ export const AlbumsPage = () => {
                 />
               </div>
               <h2 className="mt-2 text-base font-semibold">{album.name}</h2>
+              {album.createdAt && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {album.createdAt}
+                </p>
+              )}
             </button>
 
             {isAuthenticated && (
